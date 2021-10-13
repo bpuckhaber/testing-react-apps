@@ -8,9 +8,9 @@ import Login from '../../components/login'
 
 test('submitting the form calls onSubmit with username and password', () => {
   let submittedData
-  const handleSubmit = data => {
+  const handleSubmit = jest.fn(data => {
     submittedData = data
-  }
+  })
 
   render(<Login onSubmit={handleSubmit} />)
 
@@ -29,7 +29,7 @@ test('submitting the form calls onSubmit with username and password', () => {
     }),
   )
 
-  expect(submittedData).toEqual({
+  expect(handleSubmit).toHaveBeenCalledWith({
     username: 'foo',
     password: 'bar',
   })
