@@ -2,26 +2,11 @@
 // http://localhost:3000/location
 
 import * as React from 'react'
-import {
-  render,
-  screen,
-  act,
-  waitForElementToBeRemoved,
-} from '@testing-library/react'
+import {render, screen, act} from '@testing-library/react'
 import Location from '../../examples/location'
+import {useCurrentPosition} from 'react-use-geolocation'
 
-window.navigator.geolocation = {
-  getCurrentPosition: jest.fn(),
-}
-
-function deferred() {
-  let resolve, reject
-  const promise = new Promise((res, rej) => {
-    resolve = res
-    reject = rej
-  })
-  return {promise, resolve, reject}
-}
+jest.mock('react-use-geolocation')
 
 test('displays the users current location', async () => {
   const fakePosition = {
@@ -31,19 +16,20 @@ test('displays the users current location', async () => {
     },
   }
 
-  const {promise, resolve} = deferred()
-
-  window.navigator.geolocation.getCurrentPosition.mockImplementation(cb =>
-    promise.then(() => cb(fakePosition)),
-  )
+  let setCurrentPosition
+  function useMockCurrentPosition() {
+    const [state, setState] = React.useState()
+    setCurrentPosition = setState
+    return [state]
+  }
+  useCurrentPosition.mockImplementation(useMockCurrentPosition)
 
   render(<Location />)
 
   expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
 
-  await act(async () => {
-    resolve()
-    await promise
+  act(() => {
+    setCurrentPosition(fakePosition)
   })
 
   expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument()
