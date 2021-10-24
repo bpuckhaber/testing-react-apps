@@ -42,6 +42,32 @@ test('displays the users current location', async () => {
   )
 })
 
+test('displays an error when the user denies geolocation', async () => {
+  let setCurrentPosition
+  let setCurrentPositionError
+  function useMockCurrentPosition() {
+    const [state, setState] = React.useState()
+    const [error, setError] = React.useState()
+    setCurrentPosition = setState
+    setCurrentPositionError = setError
+    return [state, error]
+  }
+  useCurrentPosition.mockImplementation(useMockCurrentPosition)
+
+  render(<Location />)
+
+  expect(screen.getByLabelText(/loading/i)).toBeInTheDocument()
+
+  const fakeError = {code: 1, message: 'User denied Geolocation'}
+  act(() => {
+    setCurrentPositionError(fakeError)
+  })
+
+  expect(screen.queryByLabelText(/loading/i)).not.toBeInTheDocument()
+
+  expect(screen.getByText(fakeError.message)).toBeInTheDocument()
+})
+
 /*
 eslint
   no-unused-vars: "off",
